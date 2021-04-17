@@ -1,6 +1,7 @@
 # Many-to-one sliding window LSTM in Pytorch
 
 * Many-to-one LSTM using sliding window for arbitrary and varying sequence lengths.
+* Can be set to use GPU.
 * Uses zero-padding to get an equal number of windows fitted to the sequence lengths using the chosen stride.
 * Can easily be adapted for classification/regression problems.
 
