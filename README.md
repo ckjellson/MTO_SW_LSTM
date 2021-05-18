@@ -3,7 +3,8 @@
 * Many-to-one LSTM using sliding window for arbitrary and varying sequence lengths.
 * Can be set to use GPU.
 * Uses zero-padding to get an equal number of windows fitted to the sequence lengths using the chosen stride.
-* Can easily be adapted for classification/regression problems.
+
+Model was the basis for the main contribution to estimation of relative positions in 2nd place submission to Kaggle-competition https://www.kaggle.com/c/indoor-location-navigation/overview
 
 # Files
 
