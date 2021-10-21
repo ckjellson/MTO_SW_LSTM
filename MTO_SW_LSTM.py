@@ -50,8 +50,6 @@ class MTO_SW_LSTM(nn.Module):
         units.append(('af'+str(len(nout)), nn.Tanh()))
         units.append(('lin'+str(len(nout)), nn.Linear(nout[-2],nout[-1])))
         self.dnn = nn.Sequential(OrderedDict(units))
-        # Choose activation function:
-        self.af = nn.Sigmoid()
         
         # Settings
         self.bidir = bidir
@@ -139,8 +137,7 @@ class MTO_SW_LSTM(nn.Module):
         
         # many-to-one rnn, get the last result
         y = torch.stack([out[i,np.array(lengths[i])-1, -1, :] for i in range(len(lengths))],dim=0)
-        y = self.af(self.dnn(y))
-        
+        y = self.dnn(y)
         return y
     
     '''
@@ -159,7 +156,7 @@ class MTO_SW_LSTM(nn.Module):
         nseq = len(train_data)
         
         optimizer = optim.RMSprop(self.parameters(), lr=learning_rate)
-        criterion = nn.MSELoss()
+        criterion = nn.CrossEntropyLoss()
         
         time0 = time.time()
         running_loss_list= []
@@ -214,3 +211,14 @@ class MTO_SW_LSTM(nn.Module):
                 print("Epoch {} - Training loss: {} - Validation loss: {}".format(ee+1, mean_train_loss, val_loss_list[-1]))
         print("Finished training in ", time.time()-time0, " seconds")
         return None
+    
+    def test_model(self, test_data, using_gpu):
+        x_test = [test_data[i][0] for i in range(len(test_data))]
+        y_test = torch.cat([test_data[i][1] for i in range(len(test_data))],dim=0)
+        
+        nbatchseq = len(x_test)
+        with torch.no_grad():
+            out = self.forward(x_test,using_gpu,nbatchseq)
+                
+        probs = torch.nn.functional.softmax(out,dim=1)
+        return probs, out, y_test
