@@ -44,10 +44,10 @@ class MTO_SW_LSTM(nn.Module):
         units.append(('fc0', nn.Linear(hidden_size, nout[0])))
         for i in range(len(nout)-2):
             units.append(('do'+str(i), nn.Dropout(dropout2)))
-            units.append(('af'+str(i), nn.Tanh()))
+            units.append(('af'+str(i), nn.ReLU()))
             units.append(('lin'+str(i), nn.Linear(nout[i],nout[i+1])))
         units.append(('do'+str(len(nout)), nn.Dropout(dropout2)))
-        units.append(('af'+str(len(nout)), nn.Tanh()))
+        units.append(('af'+str(len(nout)), nn.ReLU()))
         units.append(('lin'+str(len(nout)), nn.Linear(nout[-2],nout[-1])))
         self.dnn = nn.Sequential(OrderedDict(units))
         
@@ -161,6 +161,8 @@ class MTO_SW_LSTM(nn.Module):
         time0 = time.time()
         running_loss_list= []
         val_loss_list = []
+
+        min_val_error = 1000
                 
         for ee in range(epochs):
             #print("Running epoch ", ee+1)
@@ -208,7 +210,13 @@ class MTO_SW_LSTM(nn.Module):
                     out = self.forward(x_val,using_gpu,nvalseq)
                     loss = criterion(out, y_val)
                     val_loss_list.append(loss.item())
-                print("Epoch {} - Training loss: {} - Validation loss: {}".format(ee+1, mean_train_loss, val_loss_list[-1]))
+                    if min_val_error>val_loss_list[-1]:
+                        best_model = copy.deepcopy(self.state_dict())
+                        min_val_error = val_loss_list[-1]
+                        savedat = ee
+                    print("Epoch {} - Training loss: {} - Validation loss: {}".format(ee+1, mean_train_loss, val_loss_list[-1]))
+        self.load_state_dict(best_model)
+        print('Model saved at epoch: ', savedat+1)
         print("Finished training in ", time.time()-time0, " seconds")
         return None
     
